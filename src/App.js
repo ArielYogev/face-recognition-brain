@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 // import Particles from 'react-particles-js'; 
 import ParticlesBg from 'particles-bg'
 import Clarifai from 'clarifai';
+//const Clarifai = require('clarifai');
 import FaceRecognition from './components/FaceRecognition/FaceRecognition';
 import Navigation from './components/Navigation/Navigation';
 import Signin from './components/Signin/Signin';
@@ -11,23 +12,16 @@ import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import Rank from './components/Rank/Rank';
 import './App.css';
 
-//You must add your own API key here from Clarifai.
-const app = new Clarifai.App({
- apiKey: 'YOUR API KEY HERE'
-});
+const PAT = '926b5c01f24f47719d279e42048b45b3';
+const USER_ID = 'clarifai';
+const APP_ID = 'main';
+const MODEL_ID = 'face-detection';
+const MODEL_VERSION_ID = '6dc7e46bc9124c5c8824be4822abe105';
 
-// No Longer need this. Updated to particles-bg
-// const particlesOptions = {
-//   particles: {
-//     number: {
-//       value: 30,
-//       density: {
-//         enable: true,
-//         value_area: 800
-//       }
-//     }
-//   }
-// }
+
+// const app = new Clarifai.App({
+//  apiKey: '20466d8c499f4ee8a826f0fc770c0f3e'
+// });
 
 class App extends Component {
   constructor() {
@@ -71,43 +65,92 @@ class App extends Component {
     }
   }
 
+  // displayFaceBox = (box) => {
+  //   this.setState({box: box});
+  // }
   displayFaceBox = (box) => {
-    this.setState({box: box});
-  }
+    this.setState({ box: box });
+}
+
 
   onInputChange = (event) => {
     this.setState({input: event.target.value});
   }
 
-  onButtonSubmit = () => {
-    this.setState({imageUrl: this.state.input});
+  // onButtonSubmit = () => {
+  //   this.setState({imageUrl: this.state.input});
    
-    // HEADS UP! Sometimes the Clarifai Models can be down or not working as they are constantly getting updated.
-    // A good way to check if the model you are using is up, is to check them on the clarifai website. For example,
-    // for the Face Detect Mode: https://www.clarifai.com/models/face-detection
-    // If that isn't working, then that means you will have to wait until their servers are back up. 
+  //   app.models.predict('face-detection', this.state.input)
+  //     .then(response => {
+  //       console.log('hi', response)
+  //       if (response) {
+  //         fetch('http://localhost:3000/image', {
+  //           method: 'put',
+  //           headers: {'Content-Type': 'application/json'},
+  //           body: JSON.stringify({
+  //             id: this.state.user.id
+  //           })
+  //         })
+  //           .then(response => response.json())
+  //           .then(count => {
+  //             this.setState(Object.assign(this.state.user, { entries: count}))
+  //           })
 
-    app.models.predict('face-detection', this.state.input)
-      .then(response => {
-        console.log('hi', response)
-        if (response) {
-          fetch('http://localhost:3000/image', {
-            method: 'put',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-              id: this.state.user.id
-            })
-          })
-            .then(response => response.json())
-            .then(count => {
-              this.setState(Object.assign(this.state.user, { entries: count}))
-            })
+  //       }
+  //       this.displayFaceBox(this.calculateFaceLocation(response))
+  //     })
+  //     .catch(err => console.log(err));
+  // }
 
-        }
-        this.displayFaceBox(this.calculateFaceLocation(response))
-      })
-      .catch(err => console.log(err));
-  }
+  onButtonSubmit = () => {
+    this.setState({ imageUrl: this.state.input });
+
+    // שליחת בקשה ל-API של Clarifai
+    const raw = JSON.stringify({
+        "user_app_id": {
+            "user_id": USER_ID,
+            "app_id": APP_ID
+        },
+        "inputs": [
+            {
+                "data": {
+                    "image": {
+                        "url": this.state.input
+                    }
+                }
+            }
+        ]
+    });
+
+    const requestOptions = {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Key ' + PAT
+        },
+        body: raw
+    };
+    fetch('/v2/models/face-detection/versions/6dc7e46bc9124c5c8824be4822abe105/outputs', requestOptions)
+    //fetch(`https://api.clarifai.com/v2/models/${MODEL_ID}/versions/${MODEL_VERSION_ID}/outputs`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+            const regions = result.outputs[0].data.regions;
+            console.log('Response:', result);
+            // חישוב מיקום הפנים בתמונה
+            regions.forEach(region => {
+                const boundingBox = region.region_info.bounding_box;
+                const topRow = boundingBox.top_row * 10; // ייתכן שתצטרך לחשב את המידות
+                const leftCol = boundingBox.left_col * 10;
+                const bottomRow = boundingBox.bottom_row * 10;
+                const rightCol = boundingBox.right_col * 10;
+
+                // הצגת התוצאה על המיקום
+                this.displayFaceBox({ topRow, leftCol, bottomRow, rightCol });
+            });
+        })
+        .catch(error => console.log('Error:', error));
+};
+
 
   onRouteChange = (route) => {
     if (route === 'signout') {
@@ -122,7 +165,7 @@ class App extends Component {
     const { isSignedIn, imageUrl, route, box } = this.state;
     return (
       <div className="App">
-        <ParticlesBg type="fountain" bg={true} />
+        <ParticlesBg type="polygon" bg={true} />
         <Navigation isSignedIn={isSignedIn} onRouteChange={this.onRouteChange} />
         { route === 'home'
           ? <div>

@@ -1,11 +1,16 @@
-.form {
-  width: 700px;
-  background:
-  radial-gradient(circle farthest-side at 0% 50%,#fb1 23.5%,rgba(240,166,17,0) 0)21px 30px,
-  radial-gradient(circle farthest-side at 0% 50%,#B71 24%,rgba(240,166,17,0) 0)19px 30px,
-  linear-gradient(#fb1 14%,rgba(240,166,17,0) 0, rgba(240,166,17,0) 85%,#fb1 0)0 0,
-  linear-gradient(150deg,#fb1 24%,#B71 0,#B71 26%,rgba(240,166,17,0) 0,rgba(240,166,17,0) 74%,#B71 0,#B71 76%,#fb1 0)0 0,
-  linear-gradient(30deg,#fb1 24%,#B71 0,#B71 26%,rgba(240,166,17,0) 0,rgba(240,166,17,0) 74%,#B71 0,#B71 76%,#fb1 0)0 0,
-  linear-gradient(90deg,#B71 2%,#fb1 0,#fb1 98%,#B71 0%)0 0 #fb1;
-  background-size:40px 60px;
+.form{
+  width:700px ;
+      --s: 83px; /* control the size*/
+      --c1: #f6f6f6;
+      --c2: #fbd334;
+      
+      --_g: #0000 83%,var(--c1) 85% 99%,#0000 101%;
+      background:
+        radial-gradient(27% 29% at right ,var(--_g)) calc(var(--s)/ 2) var(--s),
+        radial-gradient(27% 29% at left  ,var(--_g)) calc(var(--s)/-2) var(--s),
+        radial-gradient(29% 27% at top   ,var(--_g)) 0 calc(var(--s)/ 2),
+        radial-gradient(29% 27% at bottom,var(--_g)) 0 calc(var(--s)/-2)
+        var(--c2);
+      background-size: calc(2*var(--s)) calc(2*var(--s));
+    
 }
